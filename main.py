@@ -15,8 +15,7 @@ class ModelFramework:
         self.SEED = 69
         self.class_names = ['positive', 'negative']
         self.model = None
-        self.epochs = epochs
-        self.batch_size = batch_size
+        self.embedding_dim = 300
         self._xy_extraction()
         self._train_test_split()
         self._text_vectorization()
@@ -27,7 +26,6 @@ class ModelFramework:
         """Transforming Input Text Into np array with col0=X and col1=1"""
         with open(self.data_file, "r") as f:
             xy_tuples = [(str(line[:-4]), int(line[-2])) for line in f]
-        # self.X = list(map(lambda x: x.split(), [row[0] for row in xy_tuples]))
         self.X = [row[0] for row in xy_tuples]
         self.y = [row[1] for row in xy_tuples]
 
@@ -36,21 +34,21 @@ class ModelFramework:
         self.Xtr, self.Xte, self.ytr, self.yte = train_test_split(self.X, self.y, test_size=0.2,
                                                                   random_state=self.SEED, shuffle=True)
 
-    def _text_vectorization(self, max_token=20000, out_len=200):
-        self.vectorizer = TextVectorization(max_tokens=max_token, output_sequence_length=out_len)
+        print('hahahaa')
+
+    def _text_vectorization(self):
+        self.vectorizer = TextVectorization(max_tokens=20000, output_sequence_length=self.embedding_dim)
         text_ds = tf.data.Dataset.from_tensor_slices(self.Xtr).batch(128)
         self.vectorizer.adapt(text_ds)
         voc = self.vectorizer.get_vocabulary()
         self.word_index = dict(zip(voc, range(len(voc))))  # matching vocabulary to index
 
     def _embedding_init(self):
-        num_tokens = len(self.vectorizer.get_vocabulary()) + 2
-        embedding_dim = 50
+        num_tokens = len(self.word_index) + 2
         hits = 0
         misses = 0
-
         # Prepare embedding matrix
-        self.embedding_matrix = np.zeros((num_tokens, embedding_dim))
+        self.embedding_matrix = np.zeros((num_tokens, self.embedding_dim))
         for word, i in self.word_index.items():
             embedding_vector = embeddings_index.get(word)
             if embedding_vector is not None:
@@ -61,10 +59,10 @@ class ModelFramework:
             else:
                 misses += 1
         print("Converted %d words (%d misses)" % (hits, misses))
-
-        self.embedding_layer = Embedding(num_tokens, embedding_dim,
+        self.embedding_layer = Embedding(num_tokens, self.embedding_dim,
                                          embeddings_initializer=keras.initializers.Constant(self.embedding_matrix),
                                          trainable=False)
+
 
     def _train_test_emb(self):
         self.Xtr = self.vectorizer(np.array([[s] for s in self.Xtr])).numpy()
@@ -73,7 +71,7 @@ class ModelFramework:
         self.yte = tf.one_hot(self.yte, len(self.class_names), dtype='float32').numpy()
 
     def fit(self):
-        self.model.compile(optimizer="rmsprop", metrics=["accuracy"], loss="binary_crossentropy")
+        self.model.compile(optimizer="adam", metrics=["accuracy"], loss="binary_crossentropy")
         self.model.fit(self.Xtr, self.ytr, batch_size=self.batch_size,
                        epochs=self.epochs, validation_data=(self.Xte, self.yte))
 
