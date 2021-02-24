@@ -1,6 +1,6 @@
 import numpy as np
 
-path_to_glove_file = "./embeddings/glove.6B.300d.txt"
+path_to_glove_file = "./embeddings/glove.6B.50d.txt"
 
 embeddings_index = {}
 with open(path_to_glove_file) as f:

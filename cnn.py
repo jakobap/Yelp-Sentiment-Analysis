@@ -1,7 +1,10 @@
 from main import ModelFramework
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.layers import Embedding
 
 import numpy as np
 
@@ -31,6 +34,7 @@ class CNN(ModelFramework):
         x = layers.GlobalMaxPooling1D()(x)
         preds = layers.Dense(len(self.class_names), activation="sigmoid")(x)
         self.model = keras.Model(int_sequences_input, preds)
+        print('##### Model Architecture Check #####')
 
 
 class CNNChar(CNN):
@@ -44,30 +48,43 @@ class CNNChar(CNN):
         self._model()
 
     def _embedding_init(self):
-        num_tokens = len(self.word_index) + 2
-        hits = 0
-        misses = 0
+        tk = Tokenizer(num_words=None, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',
+                       lower=True, split=' ', char_level=True, oov_token='UNK')
+        tk.fit_on_texts(self.Xtr)
 
-        tk = Tokenizer(num_words=None, char_level=True, oov_token='UNK')
-        tk.fit_on_texts(train_texts)
+        # Convert string to index
+        train_sequences = tk.texts_to_sequences(self.Xtr)
+        test_texts = tk.texts_to_sequences(self.Xte)
 
+        # Padding
+        train_data = pad_sequences(train_sequences, padding='pre', maxlen=256)
+        test_data = pad_sequences(test_texts, padding='pre', maxlen=256)
 
-        #
-        # # Prepare embedding matrix
-        # self.embedding_matrix = np.zeros((num_tokens, self.embedding_dim))
-        # for word, i in self.word_index.items():
-        #     embedding_vector = embeddings_index.get(word)
-        #     if embedding_vector is not None:
-        #         # Words not found in embedding index will be all-zeros.
-        #         # This includes the representation for "padding" and "OOV"
-        #         self.embedding_matrix[i] = embedding_vector
-        #         hits += 1
-        #     else:
-        #         misses += 1
-        # print("Converted %d words (%d misses)" % (hits, misses))
-        # self.embedding_layer = Embedding(num_tokens, self.embedding_dim,
-        #                                  embeddings_initializer=keras.initializers.Constant(self.embedding_matrix),
-        #                                  trainable=False)
+        # Convert to numpy array
+        self.Xtr = np.array(train_data, dtype='float32')
+        self.Xte = np.array(test_data, dtype='float32')
+
+        self.embedding_layer = Embedding(input_dim=len(tk.word_index)+1, output_dim=self.embedding_dim, input_length=256)
+        print('##### Vocab & Embedding Layer Check #####')
+
+    def _train_test_emb(self):
+        self.ytr = tf.one_hot(self.ytr, len(self.class_names), dtype='float32').numpy()
+        self.yte = tf.one_hot(self.yte, len(self.class_names), dtype='float32').numpy()
+        print('##### Train Test Embedding Check #####')
+
+    def _model(self):
+        int_sequences_input = keras.Input(shape=(None,), dtype='int64')
+        embedded_sequences = self.embedding_layer(int_sequences_input)
+        x = layers.Conv1D(256, self.c_filt_size, strides=1, activation="relu")(embedded_sequences)
+        x = layers.MaxPooling1D(2)(x)
+        x = layers.Dropout(self.dropout)(x)
+        x = layers.Conv1D(128, self.c_filt_size, strides=1, activation="relu")(x)
+        x = layers.MaxPooling1D(2)(x)
+        x = layers.Dropout(self.dropout)(x)
+        x = layers.GlobalMaxPooling1D()(x)
+        preds = layers.Dense(len(self.class_names), activation="sigmoid")(x)
+        self.model = keras.Model(int_sequences_input, preds)
+        print('##### Model Architecture Check #####')
 
 
 if __name__ == '__main__':
@@ -75,7 +92,7 @@ if __name__ == '__main__':
     # print(cnn.model.summary())
     # cnn.fit()
 
-    cnn_char = CNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=1, dropout=.6)
+    cnn_char = CNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=5, dropout=.3)
     print(cnn_char.model.summary())
     cnn_char.fit()
 

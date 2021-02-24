@@ -15,7 +15,8 @@ class ModelFramework:
         self.SEED = 69
         self.class_names = ['positive', 'negative']
         self.model = None
-        self.embedding_dim = 300
+        self.embedding_dim = 50
+
         self._xy_extraction()
         self._train_test_split()
         self._text_vectorization()
@@ -33,8 +34,7 @@ class ModelFramework:
         """Split In Train And Test Set"""
         self.Xtr, self.Xte, self.ytr, self.yte = train_test_split(self.X, self.y, test_size=0.2,
                                                                   random_state=self.SEED, shuffle=True)
-
-        print('hahahaa')
+        print('##### Train Test Split Check #####')
 
     def _text_vectorization(self):
         self.vectorizer = TextVectorization(max_tokens=20000, output_sequence_length=self.embedding_dim)
@@ -42,6 +42,7 @@ class ModelFramework:
         self.vectorizer.adapt(text_ds)
         voc = self.vectorizer.get_vocabulary()
         self.word_index = dict(zip(voc, range(len(voc))))  # matching vocabulary to index
+        print('##### Text Vec Check #####')
 
     def _embedding_init(self):
         num_tokens = len(self.word_index) + 2
@@ -62,13 +63,14 @@ class ModelFramework:
         self.embedding_layer = Embedding(num_tokens, self.embedding_dim,
                                          embeddings_initializer=keras.initializers.Constant(self.embedding_matrix),
                                          trainable=False)
-
+        print('##### Vocab & Embedding Layer Check #####')
 
     def _train_test_emb(self):
         self.Xtr = self.vectorizer(np.array([[s] for s in self.Xtr])).numpy()
         self.Xte = self.vectorizer(np.array([[s] for s in self.Xte])).numpy()
         self.ytr = tf.one_hot(self.ytr, len(self.class_names), dtype='float32').numpy()
         self.yte = tf.one_hot(self.yte, len(self.class_names), dtype='float32').numpy()
+        print('##### Train Test Embedding Check #####')
 
     def fit(self):
         self.model.compile(optimizer="adam", metrics=["accuracy"], loss="binary_crossentropy")
