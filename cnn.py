@@ -11,11 +11,11 @@ import numpy as np
 
 class CNN(ModelFramework):
     """
-    Best Validation Accuracy so far: 86.5
+    Top Score:
+    Score: [0.35780662298202515, 0.8733333349227905]
     """
     def __init__(self, data_file, epochs, batch_size, dropout):
         super().__init__(data_file, epochs, batch_size)
-        self.c_filt_size = 2
         self.epochs = epochs
         self.batch_size = batch_size
         self.dropout = dropout
@@ -25,19 +25,30 @@ class CNN(ModelFramework):
     def _model(self):
         int_sequences_input = keras.Input(shape=(None,), dtype='int64')
         embedded_sequences = self.embedding_layer(int_sequences_input)
-        x = layers.Conv1D(64, self.c_filt_size, strides=1, activation="relu")(embedded_sequences)
-        x = layers.MaxPooling1D(2)(x)
-        x = layers.Dropout(self.dropout)(x)
-        x = layers.Dense(32, activation="relu")(x)
-        x = layers.Dropout(self.dropout)(x)
-        x = layers.MaxPooling1D(2)(x)
+        x = layers.Conv1D(filters=32, kernel_size=4, strides=1, activation="relu")(embedded_sequences)
         x = layers.GlobalMaxPooling1D()(x)
-        preds = layers.Dense(len(self.class_names), activation="sigmoid")(x)
+        x = layers.Dropout(self.dropout)(x)
+        x = layers.Flatten()(x)
+        x = layers.Dense(8, activation="relu")(x)
+        x = layers.Dropout(self.dropout)(x)
+        preds = layers.Dense(1, activation="sigmoid")(x)
         self.model = keras.Model(int_sequences_input, preds)
         print('##### Model Architecture Check #####')
 
+        # int_sequences_input = keras.Input(shape=(None,), dtype='int64')
+        # embedded_sequences = self.embedding_layer(int_sequences_input)
+        # x = layers.Conv1D(filters=2056, kernel_size=4, strides=1, activation="relu")(embedded_sequences)
+        # x = layers.GlobalMaxPooling1D()(x)
+        # x = layers.Dropout(self.dropout)(x)
+        # x = layers.Flatten()(x)
+        # x = layers.Dense(64, activation="relu")(x)
+        # x = layers.Dropout(self.dropout)(x)
+        # preds = layers.Dense(1, activation="sigmoid")(x)
+        # self.model = keras.Model(int_sequences_input, preds)
+        # print('##### Model Architecture Check #####')
 
-class CNNChar(CNN):
+
+class CNNChar(ModelFramework):
     def __init__(self, data_file, epochs, batch_size, dropout):
         super().__init__(data_file, epochs, batch_size, dropout)
         self.c_filt_size = 2
@@ -88,12 +99,12 @@ class CNNChar(CNN):
 
 
 if __name__ == '__main__':
-    # cnn = CNN(data_file="data/yelp_labelled.txt", epochs=25, batch_size=1, dropout=.6)
-    # print(cnn.model.summary())
-    # cnn.fit()
+    cnn = CNN(data_file="data/yelp_labelled.txt", epochs=50, batch_size=64, dropout=.2)
+    print(cnn.model.summary())
+    cnn.fit()
 
-    cnn_char = CNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=5, dropout=.3)
-    print(cnn_char.model.summary())
-    cnn_char.fit()
+    # cnn_char = CNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=5, dropout=.3)
+    # print(cnn_char.model.summary())
+    # cnn_char.fit()
 
     print('hello worlds')

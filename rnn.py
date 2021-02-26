@@ -22,17 +22,27 @@ class RNN(ModelFramework):
         self._model()
 
     def _model(self):
+        # int_sequences_input = keras.Input(shape=(None,), dtype='int64')
+        # embedded_sequences = self.embedding_layer(int_sequences_input)
+        # x = layers.SimpleRNN(2056, activation='relu')(embedded_sequences)
+        # # x = layers.LSTM(16, return_sequences=True, activation='relu')(embedded_sequences)
+        # # x = layers.Bidirectional(tf.keras.layers.LSTM(8, activation='sigmoid'))(x)
+        # x = layers.Dense(1024, activation='sigmoid')(x)
+        # # x = layers.GlobalMaxPooling2D()(x)
+        # x = layers.Dropout(self.dropout)(x)
+        # preds = layers.Dense(1, activation="sigmoid")(x)
+        # self.model = keras.Model(int_sequences_input, preds)
+
         int_sequences_input = keras.Input(shape=(None,), dtype='int64')
         embedded_sequences = self.embedding_layer(int_sequences_input)
-        x = layers.Bidirectional(tf.keras.layers.LSTM(64, activation='relu'))(embedded_sequences)
+        x = layers.Bidirectional(tf.keras.layers.GRU(10, return_sequences=True))(embedded_sequences)
+        x = layers.Bidirectional(tf.keras.layers.GRU(5))(x)
         x = layers.Dropout(self.dropout)(x)
-        x = layers.Bidirectional(tf.keras.layers.LSTM(32, activation='relu'))(embedded_sequences)
-        x = layers.Dropout(self.dropout)(x)
-        preds = layers.Dense(len(self.class_names), activation="sigmoid")(x)
+        preds = layers.Dense(1, activation="sigmoid")(x)
         self.model = keras.Model(int_sequences_input, preds)
 
 
-class RNNChar(RNN):
+class RNNChar(ModelFramework):
     def __init__(self, data_file, epochs, batch_size, dropout):
         super().__init__(data_file, epochs, batch_size, dropout)
         self.c_filt_size = 2
@@ -67,14 +77,24 @@ class RNNChar(RNN):
         self.yte = tf.one_hot(self.yte, len(self.class_names), dtype='float32').numpy()
         print('##### Train Test Embedding Check #####')
 
+    def _model(self):
+        int_sequences_input = keras.Input(shape=(None,), dtype='int64')
+        embedded_sequences = self.embedding_layer(int_sequences_input)
+        x = layers.LSTM(16, return_sequences=True)(embedded_sequences)
+        x = layers.LSTM(8)(x)
+        x = layers.Dense(8)(x)
+        x = layers.Dropout(self.dropout)(x)
+        preds = layers.Dense(1, activation="sigmoid")(x)
+        self.model = keras.Model(int_sequences_input, preds)
+
 
 if __name__ == '__main__':
-    # rnn = RNN(data_file="data/yelp_labelled.txt", epochs=25, batch_size=64, dropout=.7)
-    # print(rnn.model.summary())
-    # rnn.fit()
+    rnn = RNN(data_file="data/yelp_labelled.txt", epochs=10, batch_size=64, dropout=.5)
+    print(rnn.model.summary())
+    rnn.fit()
 
-    cnn_char = RNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=5, dropout=.3)
-    print(cnn_char.model.summary())
-    cnn_char.fit()
+    # cnn_char = RNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=10, dropout=.5)
+    # print(cnn_char.model.summary())
+    # cnn_char.fit()
 
     print('hello worlds')
