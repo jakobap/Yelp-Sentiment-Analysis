@@ -1,4 +1,4 @@
-from main import ModelFramework, CharFramework
+from main import ModelFramework, CharBased
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -9,7 +9,7 @@ from tensorflow.keras.layers import Embedding
 import numpy as np
 
 
-class RNNChar(CharFramework):
+class RNNChar(CharBased):
     """
     Top Validation Performance [loss, accuracy]: [0.6910178065299988, 0.6600000262260437]
     """

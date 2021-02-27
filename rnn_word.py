@@ -1,10 +1,10 @@
-from main import ModelFramework
+from main import WordBased
 from tensorflow import keras
 import tensorflow as tf
 from tensorflow.keras import layers
 
 
-class RNNword(ModelFramework):
+class RNNword(WordBased):
     """
     Top Validation Performance [loss, accuracy]: [0.3951157033443451, 0.8600000143051147]
     """

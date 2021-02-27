@@ -1,15 +1,10 @@
-from main import ModelFramework, CharFramework
+from main import CharBased
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.layers import Embedding
-
-import numpy as np
 
 
-class CNNChar(CharFramework):
+class CNNChar(CharBased):
     """
     Top Validation Performance [loss, accuracy]: [0.4801945388317108, 0.8133333325386047]
     """

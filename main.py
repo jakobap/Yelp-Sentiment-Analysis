@@ -22,8 +22,6 @@ class ModelFramework:
         self._xy_extraction()  # Calling data extraction
         self._train_test_split()  # Calling train test split
         self._text_vectorization()  # Calling Text vectorization
-        self._embedding_init()  # Calling embedding initialization
-        self._train_test_emb()  # Calling Embedding application on train and test set
 
     def _xy_extraction(self):
         """
@@ -57,6 +55,32 @@ class ModelFramework:
         voc = self.vectorizer.get_vocabulary()
         self.word_index = dict(zip(voc, range(len(voc))))  # matching vocabulary to index in dict
         print('##### Vocabulary Check #####')
+
+    def fit(self):
+        """
+        Compile, fit and evaluate model.
+        1st Compile model with optimization parameters
+        2nd Fit model by passing data and training parameters
+        3rd Validate model with test set and compute model performance
+        """
+        self.model.compile(optimizer="adam", metrics=["accuracy"], loss="binary_crossentropy")
+        self.model.fit(self.Xtr, self.ytr, batch_size=self.batch_size,
+                       epochs=self.epochs, validation_data=(self.Xte, self.yte))
+        score = self.model.evaluate(self.Xte, self.yte, batch_size=self.batch_size)
+        print(self.model.metrics_names)
+        print(f'Score: {score}')
+        self.model.save(f'./models/{self.model_name}acc_{score[1]}')
+
+
+class WordBased(ModelFramework):
+    def __init__(self, data_file, epochs, batch_size, dropout):
+        super().__init__(data_file, epochs, batch_size)
+        self.epochs = epochs  # Model Training Epochs
+        self.batch_size = batch_size  # Training Batch Size
+        self.dropout = dropout  # Dropout Probability for dropout layers
+
+        self._embedding_init()  # Calling embedding initialization
+        self._train_test_emb()  # Calling Embedding application on train and test set
 
     def _embedding_init(self):
         """
@@ -113,23 +137,8 @@ class ModelFramework:
         # self.yte = tf.one_hot(self.yte, len(self.class_names), dtype='float32').numpy()
         print('##### Train Test Embedding Check #####')
 
-    def fit(self):
-        """
-        Compile, fit and evaluate model.
-        1st Compile model with optimization parameters
-        2nd Fit model by passing data and training parameters
-        3rd Validate model with test set and compute model performance
-        """
-        self.model.compile(optimizer="adam", metrics=["accuracy"], loss="binary_crossentropy")
-        self.model.fit(self.Xtr, self.ytr, batch_size=self.batch_size,
-                       epochs=self.epochs, validation_data=(self.Xte, self.yte))
-        score = self.model.evaluate(self.Xte, self.yte, batch_size=self.batch_size)
-        print(self.model.metrics_names)
-        print(f'Score: {score}')
-        self.model.save(f'./models/{self.model_name}acc_{score[1]}')
 
-
-class CharFramework(ModelFramework):
+class CharBased(ModelFramework):
     """
     Top Validation Performance [loss, accuracy]: [0.6910178065299988, 0.6600000262260437]
     """
@@ -138,9 +147,9 @@ class CharFramework(ModelFramework):
         self.epochs = epochs  # Model Training Epochs
         self.batch_size = batch_size  # Training Batch Size
         self.dropout = dropout  # Dropout Probability for dropout layers
-        self.model_name = 'RNNChar'  # Model Name for saving purpose
 
-        self._model()  # Calling Model Architecture
+        self._embedding_init()  # Calling embedding initialization
+        self._train_test_emb()  # Calling Embedding application on train and test set
 
     def _embedding_init(self):
         """

@@ -1,14 +1,14 @@
-from main import ModelFramework
+from main import ModelFramework, WordBased
 from tensorflow import keras
 from tensorflow.keras import layers
 
 
-class CNNWord(ModelFramework):
+class CNNWord(WordBased):
     """
     Top Validation Performance [loss, accuracy]: [0.4190414249897003, 0.8733333349227905]
     """
     def __init__(self, data_file, epochs, batch_size, dropout):
-        super().__init__(data_file, epochs, batch_size)
+        super().__init__(data_file, epochs, batch_size, dropout)
         self.epochs = epochs  # Model Training Epochs
         self.batch_size = batch_size  # Training Batch Size
         self.dropout = dropout  # Dropout Probability for dropout layers
