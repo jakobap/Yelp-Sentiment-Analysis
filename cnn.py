@@ -50,7 +50,7 @@ class CNN(ModelFramework):
 
 class CNNChar(ModelFramework):
     def __init__(self, data_file, epochs, batch_size, dropout):
-        super().__init__(data_file, epochs, batch_size, dropout)
+        super().__init__(data_file, epochs, batch_size)
         self.c_filt_size = 2
         self.epochs = epochs
         self.batch_size = batch_size
@@ -99,12 +99,12 @@ class CNNChar(ModelFramework):
 
 
 if __name__ == '__main__':
-    cnn = CNN(data_file="data/yelp_labelled.txt", epochs=50, batch_size=64, dropout=.2)
-    print(cnn.model.summary())
-    cnn.fit()
+    # cnn = CNN(data_file="data/yelp_labelled.txt", epochs=50, batch_size=64, dropout=.2)
+    # print(cnn.model.summary())
+    # cnn.fit()
 
-    # cnn_char = CNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=5, dropout=.3)
-    # print(cnn_char.model.summary())
-    # cnn_char.fit()
+    cnn_char = CNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=5, dropout=.3)
+    print(cnn_char.model.summary())
+    cnn_char.fit()
 
     print('hello worlds')

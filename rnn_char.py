@@ -1,48 +1,18 @@
 from main import ModelFramework
-from tensorflow import keras
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow.keras import layers
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.layers import Embedding
+
 import numpy as np
 
 
-class RNN(ModelFramework):
-    """
-    Best Validatino Accuracy so far: 80.5
-    """
-    def __init__(self, data_file, epochs, batch_size, dropout):
-        super().__init__(data_file, epochs, batch_size)
-        self.c_filt_size = 2
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.dropout = dropout
-
-        self._model()
-
-    def _model(self):
-        # int_sequences_input = keras.Input(shape=(None,), dtype='int64')
-        # embedded_sequences = self.embedding_layer(int_sequences_input)
-        # x = layers.SimpleRNN(2056, activation='relu')(embedded_sequences)
-        # # x = layers.LSTM(16, return_sequences=True, activation='relu')(embedded_sequences)
-        # # x = layers.Bidirectional(tf.keras.layers.LSTM(8, activation='sigmoid'))(x)
-        # x = layers.Dense(1024, activation='sigmoid')(x)
-        # # x = layers.GlobalMaxPooling2D()(x)
-        # x = layers.Dropout(self.dropout)(x)
-        # preds = layers.Dense(1, activation="sigmoid")(x)
-        # self.model = keras.Model(int_sequences_input, preds)
-
-        int_sequences_input = keras.Input(shape=(None,), dtype='int64')
-        embedded_sequences = self.embedding_layer(int_sequences_input)
-        x = layers.Bidirectional(tf.keras.layers.GRU(10, return_sequences=True))(embedded_sequences)
-        x = layers.Bidirectional(tf.keras.layers.GRU(5))(x)
-        x = layers.Dropout(self.dropout)(x)
-        preds = layers.Dense(1, activation="sigmoid")(x)
-        self.model = keras.Model(int_sequences_input, preds)
-
-
 class RNNChar(ModelFramework):
+    """
+    Top Validation Performance [loss, accuracy]: [0.6867722868919373, 0.6600000262260437]
+    """
     def __init__(self, data_file, epochs, batch_size, dropout):
         super().__init__(data_file, epochs, batch_size)
         self.c_filt_size = 2
@@ -80,22 +50,25 @@ class RNNChar(ModelFramework):
         print('##### Train Test Embedding Check #####')
 
     def _model(self):
+        # int_sequences_input = keras.Input(shape=(None,), dtype='int64')
+        # embedded_sequences = self.embedding_layer(int_sequences_input)
+        # x = layers.Bidirectional(tf.keras.layers.GRU(32, return_sequences=True))(embedded_sequences)
+        # # x = layers.Bidirectional(tf.keras.layers.LSTM(16))(x)
+        # x = layers.Dropout(self.dropout)(x)
+        # preds = layers.Dense(1, activation="sigmoid")(x)
+        # self.model = keras.Model(int_sequences_input, preds)
+
         int_sequences_input = keras.Input(shape=(None,), dtype='int64')
         embedded_sequences = self.embedding_layer(int_sequences_input)
-        x = layers.LSTM(16, return_sequences=True)(embedded_sequences)
-        x = layers.LSTM(8)(x)
-        x = layers.Dense(8)(x)
+        x = layers.Bidirectional(tf.keras.layers.GRU(10, return_sequences=True))(embedded_sequences)
+        x = layers.Bidirectional(tf.keras.layers.GRU(5))(x)
         x = layers.Dropout(self.dropout)(x)
         preds = layers.Dense(1, activation="sigmoid")(x)
         self.model = keras.Model(int_sequences_input, preds)
 
 
 if __name__ == '__main__':
-    # rnn = RNN(data_file="data/yelp_labelled.txt", epochs=10, batch_size=64, dropout=.5)
-    # print(rnn.model.summary())
-    # rnn.fit()
-    #
-    cnn_char = RNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=10, dropout=.5)
+    cnn_char = RNNChar(data_file="data/yelp_labelled.txt", epochs=25, batch_size=32, dropout=.5)
     print(cnn_char.model.summary())
     cnn_char.fit()
 

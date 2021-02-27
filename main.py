@@ -90,6 +90,7 @@ class ModelFramework:
         self.model.fit(self.Xtr, self.ytr, batch_size=self.batch_size,
                        epochs=self.epochs, validation_data=(self.Xte, self.yte))
         score = self.model.evaluate(self.Xte, self.yte, batch_size=self.batch_size)
+        print(self.model.metrics_names)
         print(f'Score: {score}')
 
 
