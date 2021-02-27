@@ -1,4 +1,4 @@
-from main import ModelFramework, WordBased
+from main import WordBased
 from tensorflow import keras
 from tensorflow.keras import layers
 

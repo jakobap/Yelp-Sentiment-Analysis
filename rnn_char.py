@@ -1,12 +1,6 @@
-from main import ModelFramework, CharBased
-import tensorflow as tf
+from main import CharBased
 from tensorflow import keras
 from tensorflow.keras import layers
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.layers import Embedding
-
-import numpy as np
 
 
 class RNNChar(CharBased):
