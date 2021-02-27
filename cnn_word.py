@@ -31,7 +31,7 @@ class CNNWord(ModelFramework):
 
 
 if __name__ == '__main__':
-    cnn = CNNWord(data_file="data/yelp_labelled.txt", epochs=8, batch_size=16, dropout=.3)
+    cnn = CNNWord(data_file="data/yelp_labelled.txt", epochs=5, batch_size=16, dropout=.3)  # epo:8 batch:16 drop:.3
     print(cnn.model.summary())
     cnn.fit()
 

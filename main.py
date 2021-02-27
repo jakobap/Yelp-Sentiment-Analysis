@@ -5,6 +5,9 @@ from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 from tensorflow.keras.layers import Embedding
 from sklearn.model_selection import train_test_split
 
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+
 from glove import pretrained_embedd
 
 
@@ -66,19 +69,6 @@ class ModelFramework:
         num_tokens = len(self.word_index) + 2
         hits = 0
         misses = 0
-
-        # self.embedding_matrix = np.zeros((len(pretrained_embedd)+2, self.embedding_dim))  # set up zero matrix
-        # print('#####')
-        # # count = 0
-        #
-        # for count, word in enumerate(pretrained_embedd):
-        #     self.embedding_matrix[count] = pretrained_embedd[word]
-        #
-        # self.embedding_layer = Embedding(input_dim=len(pretrained_embedd)+2, output_dim=self.embedding_dim,
-        #                                  embeddings_initializer=keras.initializers.Constant(self.embedding_matrix),
-        #                                  trainable=False)
-        # print('##### Embedding Layer Check #####')
-
         self.embedding_matrix = np.zeros((num_tokens, self.embedding_dim))  # set up zero matrix
         for word, i in self.word_index.items():  # iterate all words in vocabulary
             embedding_vector = pretrained_embedd.get(word)  # import glove pre-trained vectorization
@@ -92,6 +82,18 @@ class ModelFramework:
                                          embeddings_initializer=keras.initializers.Constant(self.embedding_matrix),
                                          trainable=False)
         print('##### Embedding Layer Check #####')
+
+        # self.embedding_matrix = np.zeros((len(pretrained_embedd)+2, self.embedding_dim))  # set up zero matrix
+        # print('#####')
+        # # count = 0
+        #
+        # for count, word in enumerate(pretrained_embedd):
+        #     self.embedding_matrix[count] = pretrained_embedd[word]
+        #
+        # self.embedding_layer = Embedding(input_dim=len(pretrained_embedd)+2, output_dim=self.embedding_dim,
+        #                                  embeddings_initializer=keras.initializers.Constant(self.embedding_matrix),
+        #                                  trainable=False)
+        # print('##### Embedding Layer Check #####')
 
     def _train_test_emb(self):
         """
@@ -125,6 +127,57 @@ class ModelFramework:
         print(self.model.metrics_names)
         print(f'Score: {score}')
         self.model.save(f'./models/{self.model_name}acc_{score[1]}')
+
+
+class CharFramework(ModelFramework):
+    """
+    Top Validation Performance [loss, accuracy]: [0.6910178065299988, 0.6600000262260437]
+    """
+    def __init__(self, data_file, epochs, batch_size, dropout):
+        super().__init__(data_file, epochs, batch_size)
+        self.epochs = epochs  # Model Training Epochs
+        self.batch_size = batch_size  # Training Batch Size
+        self.dropout = dropout  # Dropout Probability for dropout layers
+        self.model_name = 'RNNChar'  # Model Name for saving purpose
+
+        self._model()  # Calling Model Architecture
+
+    def _embedding_init(self):
+        """
+        Initializing Character Based Embedding Layer
+        1st Tokenize Raw Text input & Standardize & Filter out disturbing characters
+        2nd Convert Cleaned Strings to indice vectors
+        3rd Add padding to string vectors
+        4th Convert to numpy & fit to embedding layer
+        """
+        tk = Tokenizer(num_words=None, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',
+                       lower=True, split=' ', char_level=True, oov_token='UNK')
+        tk.fit_on_texts(self.Xtr)
+
+        # Convert string to index
+        train_sequences = tk.texts_to_sequences(self.Xtr)
+        test_texts = tk.texts_to_sequences(self.Xte)
+
+        # Padding
+        train_data = pad_sequences(train_sequences, padding='pre', maxlen=256)
+        test_data = pad_sequences(test_texts, padding='pre', maxlen=256)
+
+        # Convert to numpy array
+        self.Xtr = np.array(train_data, dtype='float32')
+        self.Xte = np.array(test_data, dtype='float32')
+
+        self.embedding_layer = Embedding(input_dim=len(tk.word_index)+1, output_dim=self.embedding_dim, input_length=256)
+        print('##### Vocab & Embedding Layer Check #####')
+
+    def _train_test_emb(self):
+        """
+        Bringing labels into numpy format, one-hot or binary depending on final network layer
+        """
+        self.ytr = np.array(self.ytr).astype('int64')
+        self.yte = np.array(self.yte).astype('int64')
+        # self.ytr = tf.one_hot(self.ytr, len(self.class_names), dtype='float32').numpy()
+        # self.yte = tf.one_hot(self.yte, len(self.class_names), dtype='float32').numpy()
+        print('##### Train Test Embedding Check #####')
 
 
 if __name__ == '__main__':
